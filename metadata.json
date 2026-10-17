@@ -1,0 +1,10 @@
+{
+  "name": "Remix Grab, Sort \u0026 Write! - 3D Hand-Tracking ESL Review Game",
+  "description": "An interactive 3D-style hand-tracking educational game for CEFR B1–B2 ESL students to master writing engaging reviews for SPM English.",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
