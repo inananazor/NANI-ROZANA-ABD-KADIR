@@ -6,15 +6,17 @@
 export type Difficulty = 'easy' | 'medium' | 'hard';
 export type InputMode = 'hand' | 'mouse';
 
+export interface DetectiveOption {
+  text: string;
+  isCorrect: boolean;
+  explanation: string;
+}
+
 export interface DetectiveQuestion {
   id: string;
   topic: string;
   hookType: 'Rhetorical Question' | 'Problem Statement' | 'Intriguing Opening' | 'Vivid Sensory Hook';
-  options: {
-    text: string;
-    isCorrect: boolean;
-    explanation: string;
-  }[];
+  options: DetectiveOption[];
   pedagogicalTip: string;
 }
 
@@ -62,6 +64,13 @@ export interface VocabRound {
   instruction: string;
 }
 
+export interface ReviewCandidate {
+  id: string;
+  text: string;
+  isCorrect: boolean;
+  reason: string;
+}
+
 export interface ReviewMasterChallenge {
   id: string;
   title: string;
@@ -73,12 +82,7 @@ export interface ReviewMasterChallenge {
     isBlank?: boolean;
   }[];
   missingSection: ReviewSection;
-  candidates: {
-    id: string;
-    text: string;
-    isCorrect: boolean;
-    reason: string;
-  }[];
+  candidates: ReviewCandidate[];
   modelReviewSummary: string;
 }
 

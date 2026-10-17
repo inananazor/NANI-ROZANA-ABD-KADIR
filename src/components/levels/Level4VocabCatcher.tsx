@@ -3,6 +3,7 @@ import { LEVEL_4_ROUNDS } from '../../data/gameContent';
 import { HandTrackingPoint, InputMode, Difficulty, VocabWord } from '../../types/game';
 import { LevelHeader } from '../LevelHeader';
 import { sounds } from '../../utils/audio';
+import { shuffleArray } from '../../utils/shuffle';
 import confetti from 'canvas-confetti';
 import { CheckCircle2, ArrowRight, Lightbulb, Sparkles, AlertTriangle } from 'lucide-react';
 
@@ -41,12 +42,12 @@ export const Level4VocabCatcher: React.FC<Level4VocabCatcherProps> = ({
 
   useEffect(() => {
     // Shuffle words for the round
-    const shuffled = [...currentRound.words].sort(() => Math.random() - 0.5);
+    const shuffled = shuffleArray(currentRound.words);
     setRemainingWords(shuffled);
     setCaughtWords([]);
     setLastFeedback(null);
     setIsRoundWon(false);
-  }, [roundIdx]);
+  }, [roundIdx, currentRound]);
 
   // Hand tracking pinch interaction
   useEffect(() => {

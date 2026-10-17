@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { LEVEL_5_CHALLENGES } from '../../data/gameContent';
-import { HandTrackingPoint, InputMode, Difficulty } from '../../types/game';
+import { HandTrackingPoint, InputMode, Difficulty, ReviewCandidate } from '../../types/game';
 import { LevelHeader } from '../LevelHeader';
 import { sounds } from '../../utils/audio';
+import { shuffleArray } from '../../utils/shuffle';
 import confetti from 'canvas-confetti';
 import { CheckCircle2, XCircle, ArrowRight, Lightbulb, Sparkles, FileText } from 'lucide-react';
 
@@ -30,6 +31,7 @@ export const Level5ReviewMaster: React.FC<Level5ReviewMasterProps> = ({
   onOpenGuide
 }) => {
   const [challengeIdx, setChallengeIdx] = useState(0);
+  const [shuffledCandidates, setShuffledCandidates] = useState<ReviewCandidate[]>([]);
   const [selectedCandidateId, setSelectedCandidateId] = useState<string | null>(null);
   const [hoveredCandidateId, setHoveredCandidateId] = useState<string | null>(null);
   const [hasAnswered, setHasAnswered] = useState(false);
@@ -37,11 +39,16 @@ export const Level5ReviewMaster: React.FC<Level5ReviewMasterProps> = ({
 
   const currentChallenge = LEVEL_5_CHALLENGES[challengeIdx];
 
+  // Randomise the 4 candidate choices whenever a new challenge loads
   useEffect(() => {
+    if (currentChallenge) {
+      setShuffledCandidates(shuffleArray(currentChallenge.candidates));
+    }
     setSelectedCandidateId(null);
     setHoveredCandidateId(null);
     setHasAnswered(false);
-  }, [challengeIdx]);
+    setWasPinching(false);
+  }, [challengeIdx, currentChallenge]);
 
   // Hand tracking pinch interaction
   useEffect(() => {
@@ -65,11 +72,11 @@ export const Level5ReviewMaster: React.FC<Level5ReviewMasterProps> = ({
     }
 
     setWasPinching(handPoint.isPinching);
-  }, [handPoint, inputMode, hasAnswered, wasPinching, currentChallenge]);
+  }, [handPoint, inputMode, hasAnswered, wasPinching, shuffledCandidates]);
 
   const handleSelectCandidate = (candidateId: string) => {
     if (hasAnswered) return;
-    const cand = currentChallenge.candidates.find(c => c.id === candidateId);
+    const cand = shuffledCandidates.find(c => c.id === candidateId);
     if (!cand) return;
 
     setSelectedCandidateId(candidateId);
@@ -100,8 +107,8 @@ export const Level5ReviewMaster: React.FC<Level5ReviewMasterProps> = ({
     }
   };
 
-  const selectedCandidate = currentChallenge.candidates.find(c => c.id === selectedCandidateId);
-  const correctCandidate = currentChallenge.candidates.find(c => c.isCorrect);
+  const selectedCandidate = shuffledCandidates.find(c => c.id === selectedCandidateId);
+  const correctCandidate = shuffledCandidates.find(c => c.isCorrect);
 
   return (
     <div className="w-full max-w-5xl mx-auto px-4 py-2 flex flex-col items-center">
@@ -210,7 +217,7 @@ export const Level5ReviewMaster: React.FC<Level5ReviewMasterProps> = ({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 perspective-1000">
-            {currentChallenge.candidates.map((cand, idx) => {
+            {shuffledCandidates.map((cand, idx) => {
               const isHovered = hoveredCandidateId === cand.id;
 
               return (

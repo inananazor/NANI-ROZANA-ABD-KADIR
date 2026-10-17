@@ -3,6 +3,7 @@ import { LEVEL_3_REVIEWS } from '../../data/gameContent';
 import { HandTrackingPoint, InputMode, Difficulty, ReviewSection, StructureSentenceItem } from '../../types/game';
 import { LevelHeader } from '../LevelHeader';
 import { sounds } from '../../utils/audio';
+import { shuffleArray } from '../../utils/shuffle';
 import confetti from 'canvas-confetti';
 import { CheckCircle2, ArrowRight, Lightbulb, Check } from 'lucide-react';
 
@@ -43,14 +44,20 @@ export const Level3Structure: React.FC<Level3StructureProps> = ({
   const currentReview = LEVEL_3_REVIEWS[reviewIdx];
 
   useEffect(() => {
-    // Shuffle the 4 sentences
-    const shuffled = [...currentReview.items].sort(() => Math.random() - 0.5);
+    // Shuffle the 4 sentences ensuring they aren't pre-solved in order
+    let shuffled = shuffleArray(currentReview.items);
+    if (
+      shuffled.length === 4 &&
+      shuffled.every((it, idx) => it.section === SECTIONS[idx])
+    ) {
+      shuffled = shuffleArray(currentReview.items);
+    }
     setUnassignedItems(shuffled);
     setPlacedItems({});
     setSelectedItemId(null);
     setIsCompleted(false);
     setIsAllCorrect(false);
-  }, [reviewIdx]);
+  }, [reviewIdx, currentReview]);
 
   // Hand tracking pinch selection / drop detection
   useEffect(() => {

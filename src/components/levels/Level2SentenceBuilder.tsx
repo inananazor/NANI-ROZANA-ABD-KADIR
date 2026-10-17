@@ -3,6 +3,7 @@ import { LEVEL_2_QUESTIONS } from '../../data/gameContent';
 import { HandTrackingPoint, InputMode, Difficulty } from '../../types/game';
 import { LevelHeader } from '../LevelHeader';
 import { sounds } from '../../utils/audio';
+import { shuffleArray } from '../../utils/shuffle';
 import confetti from 'canvas-confetti';
 import { CheckCircle2, RotateCcw, ArrowRight, Lightbulb, Sparkles } from 'lucide-react';
 
@@ -48,20 +49,27 @@ export const Level2SentenceBuilder: React.FC<Level2SentenceBuilderProps> = ({
 
   // Initialize randomized words when question changes
   useEffect(() => {
-    const randomized = [...currentQ.words]
-      .sort(() => Math.random() - 0.5)
-      .map((word, idx) => ({
-        id: `word-${questionIdx}-${idx}-${word}`,
-        word,
-        originalIndex: idx,
-        isPlaced: false
-      }));
+    let shuffledList = shuffleArray(currentQ.words);
+    // Ensure words are genuinely scrambled, not in the correct order
+    if (
+      shuffledList.length > 2 &&
+      shuffledList.every((w, i) => w === currentQ.correctOrder[i])
+    ) {
+      shuffledList = shuffleArray(currentQ.words);
+    }
+
+    const randomized = shuffledList.map((word, idx) => ({
+      id: `word-${questionIdx}-${idx}-${word}`,
+      word,
+      originalIndex: idx,
+      isPlaced: false
+    }));
     setAvailableWords(randomized);
     setAssembledWords([]);
     setIsEvaluated(false);
     setIsCorrect(false);
     setHoveredWordId(null);
-  }, [questionIdx]);
+  }, [questionIdx, currentQ]);
 
   // Hand tracking pinch interaction
   useEffect(() => {
@@ -112,7 +120,7 @@ export const Level2SentenceBuilder: React.FC<Level2SentenceBuilderProps> = ({
   const handleReset = () => {
     sounds.playDrop();
     const all = [...availableWords, ...assembledWords];
-    setAvailableWords(all.sort(() => Math.random() - 0.5));
+    setAvailableWords(shuffleArray(all));
     setAssembledWords([]);
     setIsEvaluated(false);
   };

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { LEVEL_1_QUESTIONS } from '../../data/gameContent';
-import { HandTrackingPoint, InputMode, Difficulty } from '../../types/game';
+import { HandTrackingPoint, InputMode, Difficulty, DetectiveOption } from '../../types/game';
 import { LevelHeader } from '../LevelHeader';
 import { sounds } from '../../utils/audio';
+import { shuffleArray } from '../../utils/shuffle';
 import confetti from 'canvas-confetti';
 import { CheckCircle2, XCircle, ArrowRight, Lightbulb, Sparkles } from 'lucide-react';
 
@@ -30,12 +31,24 @@ export const Level1Detective: React.FC<Level1DetectiveProps> = ({
   onOpenGuide
 }) => {
   const [questionIdx, setQuestionIdx] = useState(0);
+  const [shuffledOptions, setShuffledOptions] = useState<DetectiveOption[]>([]);
   const [selectedOptionIdx, setSelectedOptionIdx] = useState<number | null>(null);
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
   const [hasAnswered, setHasAnswered] = useState(false);
   const [wasPinching, setWasPinching] = useState(false);
 
   const currentQ = LEVEL_1_QUESTIONS[questionIdx];
+
+  // Randomise the answer options whenever the question changes
+  useEffect(() => {
+    if (currentQ) {
+      setShuffledOptions(shuffleArray(currentQ.options));
+    }
+    setSelectedOptionIdx(null);
+    setHoveredIdx(null);
+    setHasAnswered(false);
+    setWasPinching(false);
+  }, [questionIdx, currentQ]);
 
   // Hand tracking pinch selection logic
   useEffect(() => {
@@ -60,14 +73,14 @@ export const Level1Detective: React.FC<Level1DetectiveProps> = ({
     }
 
     setWasPinching(handPoint.isPinching);
-  }, [handPoint, inputMode, hasAnswered, wasPinching]);
+  }, [handPoint, inputMode, hasAnswered, wasPinching, shuffledOptions]);
 
   const handleSelectOption = (idx: number) => {
-    if (hasAnswered) return;
+    if (hasAnswered || !shuffledOptions[idx]) return;
     setSelectedOptionIdx(idx);
     setHasAnswered(true);
 
-    const isCorrect = currentQ.options[idx].isCorrect;
+    const isCorrect = shuffledOptions[idx].isCorrect;
     if (isCorrect) {
       sounds.playCorrect();
       confetti({
@@ -137,7 +150,7 @@ export const Level1Detective: React.FC<Level1DetectiveProps> = ({
 
       {/* 4 Interactive 3D Options Grid */}
       <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4 perspective-1000 mb-6">
-        {currentQ.options.map((opt, idx) => {
+        {shuffledOptions.map((opt, idx) => {
           const isSelected = selectedOptionIdx === idx;
           const isHovered = hoveredIdx === idx;
           const isCorrect = opt.isCorrect;
@@ -201,16 +214,16 @@ export const Level1Detective: React.FC<Level1DetectiveProps> = ({
       </div>
 
       {/* Immediate Educational Explanation Card */}
-      {hasAnswered && selectedOptionIdx !== null && (
+      {hasAnswered && selectedOptionIdx !== null && shuffledOptions[selectedOptionIdx] && (
         <div className="w-full bg-slate-900 border border-slate-700 rounded-2xl p-5 shadow-2xl backdrop-blur-md animate-in fade-in duration-200 space-y-3">
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-start gap-3">
               <div className={`p-2 rounded-xl mt-0.5 ${
-                currentQ.options[selectedOptionIdx].isCorrect
+                shuffledOptions[selectedOptionIdx].isCorrect
                   ? 'bg-emerald-500/20 text-emerald-400'
                   : 'bg-rose-500/20 text-rose-400'
               }`}>
-                {currentQ.options[selectedOptionIdx].isCorrect ? (
+                {shuffledOptions[selectedOptionIdx].isCorrect ? (
                   <CheckCircle2 className="w-6 h-6" />
                 ) : (
                   <XCircle className="w-6 h-6" />
@@ -219,20 +232,20 @@ export const Level1Detective: React.FC<Level1DetectiveProps> = ({
               <div className="space-y-1">
                 <h3 className="text-sm font-bold text-white flex items-center gap-2">
                   <span>
-                    {currentQ.options[selectedOptionIdx].isCorrect
+                    {shuffledOptions[selectedOptionIdx].isCorrect
                       ? 'Spot on, Detective! That is a stellar introduction.'
                       : 'Not quite the most engaging introduction.'}
                   </span>
                 </h3>
                 <p className="text-xs text-slate-300 leading-relaxed">
-                  {currentQ.options[selectedOptionIdx].explanation}
+                  {shuffledOptions[selectedOptionIdx].explanation}
                 </p>
-                {!currentQ.options[selectedOptionIdx].isCorrect && (
+                {!shuffledOptions[selectedOptionIdx].isCorrect && (
                   <div className="mt-2 p-2.5 rounded-lg bg-slate-800/80 border border-slate-700/80 text-xs text-slate-300 flex items-start gap-2">
                     <Lightbulb className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
                     <div>
                       <strong className="text-amber-300">Why the correct answer works:</strong>{' '}
-                      {currentQ.options.find(o => o.isCorrect)?.explanation}
+                      {shuffledOptions.find(o => o.isCorrect)?.explanation}
                     </div>
                   </div>
                 )}
